@@ -11,7 +11,7 @@ from torch_geometric.nn import SAGEConv, to_hetero
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-MODEL_PATH = osp.join(Path().resolve(), 'models', 'model4.pt')
+MODEL_PATH = osp.join(Path().resolve(), 'models', 'model3.pt')
 path = osp.join(Path().resolve(), 'data')
 dataset = MovieLens(path, model_name='all-MiniLM-L6-v2')
 data = dataset[0].to(device)
@@ -81,19 +81,21 @@ def home_page():
 
 @app.route('/rec', methods=['GET', 'POST']) 
 def recommend():
-    USERID=1
-    NUM_MOVIES=3
+    data_rec = request.get_json()
+    USERID=data_rec['userid']
+    NUM_MOVIES=data_rec['num']
+
     row = torch.tensor([USERID] * num_movies)
     col = torch.arange(num_movies)
     edge_label_index = torch.stack([row, col], dim=0)
     pred = model(data.x_dict, data.edge_index_dict, edge_label_index)
     pred = pred.clamp(min=0, max=5)
     idx_max = torch.topk(pred, NUM_MOVIES).indices
-    print('Recommended movies for userId ' + str(USERID))
+    ret=[]
     for i in idx_max:
         movieId = movie_mapping[int(i)]
-        print(df_movies.loc[movieId].title)
-    return "<h1>Movie recommendation api</h1>"
+        ret.append(df_movies.loc[movieId].title)
+    return jsonify(ret)
 
 if __name__ == '__main__':
     app.run()  
