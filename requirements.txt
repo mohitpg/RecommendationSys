@@ -2,3 +2,4 @@ flask==2.3.2
 torch==2.0.1
 torch_geometric==2.6.1
 pandas==1.5.3
+flask_cors==4.0.0
